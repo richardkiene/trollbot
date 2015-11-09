@@ -21,8 +21,9 @@
   },
   "homepage": "https://github.com/richardkiene/trollbot",
   "dependencies": {
-    "bunyan": "^1.5.1",
+    "bunyan": "1.5.1",
     "config": "1.16.0",
+    "jsonfile": "2.2.3",
     "slack-client": "1.4.1"
   }
 }
