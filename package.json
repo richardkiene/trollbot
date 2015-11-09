@@ -1,0 +1,28 @@
+{
+  "name": "trollbot",
+  "version": "1.0.0",
+  "description": "Slack bot for facilitating humorous interaction and stats tracking",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/richardkiene/trollbot.git"
+  },
+  "keywords": [
+    "slack",
+    "trolling"
+  ],
+  "author": "Richard Kiene",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/richardkiene/trollbot/issues"
+  },
+  "homepage": "https://github.com/richardkiene/trollbot",
+  "dependencies": {
+    "bunyan": "^1.5.1",
+    "config": "1.16.0",
+    "slack-client": "1.4.1"
+  }
+}
