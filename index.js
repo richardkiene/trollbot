@@ -59,19 +59,21 @@ function main() {
         log.debug('demeritMatch: %j', demeritMatch);
         log.debug('meritMatch: %j', meritMatch);
         if (demeritMatch) {
-            var name = demeritMatch[1];
+            var showName = demeritMatch[1];
+            var name = showName.toLowerCase();
             demerits[name] = demerits[name] ? demerits[name] + 1 : 1;
             var count = demerits[name];
 
             log.info('Demerit issued to %s', name);
-            channel.send('Demerit to ' + name + ' (count: ' + count + ')');
+            channel.send('Demerit to ' + showName + ' (count: ' + count + ')');
         } else if (meritMatch) {
-            var name = meritMatch[1];
+            var showName = meritMatch[1];
+            var name = showName.toLowerCase();
             merits[name] = merits[name] ? merits[name] + 1 : 1;
             var count = merits[name];
 
             log.info('Merit issued to %s', name);
-            channel.send('Merit to ' + name + ' (count: ' + count + ')');
+            channel.send('Merit to ' + showName + ' (count: ' + count + ')');
         }
     });
 
