@@ -25,5 +25,8 @@
     "config": "1.16.0",
     "jsonfile": "2.2.3",
     "slack-client": "1.4.1"
+  },
+  "directories": {
+    "bin": "./bin"
   }
 }

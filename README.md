@@ -7,6 +7,10 @@
 ```
 $ git clone https://github.com/richardkiene/trollbot.git
 ```
+Or install from npm.
+```
+$ npm install trollbot -g
+```
 2. Setup your configuration and data files (replace values as necessary).
 ```
 $ cp ./config/default.example ./config/default.json
@@ -17,6 +21,11 @@ $ cp ./data/merits.example ./data/merits.json
 ```
 $ node index.js --abort-on-uncaught-exception
 ```
+Or if you've installed from npm.
+```
+$ trollbot
+```
+
 4. If you'd like to get detailed output pipe to bunyan
 ```
 $ node index.js | bunyan --color
