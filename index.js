@@ -29,8 +29,10 @@ var mod_bunyan = require('bunyan');
 var mod_config = require('config');
 var mod_jsonfile = require('jsonfile');
 var mod_slack = require('slack-client');
+var mod_util = require('util');
 
 var token = mod_config.get('slack.token');
+var bot = {};
 var autoReconnect = true;
 var autoMark = true;
 
@@ -44,37 +46,120 @@ var demeritsPath = './data/demerits.json';
 var meritsPath = './data/merits.json'
 var demerits = mod_jsonfile.readFileSync(demeritsPath);
 var merits = mod_jsonfile.readFileSync(meritsPath);
+var lastMessage = undefined;
+
+var helpMessage = [
+    '@<username>: demerit         -- gives a user a demerit\n',
+    '@<username>: merit           -- gives a user a merit\n',
+    'merit                        -- gives last message user a merit\n',
+    'demerit                      -- gives last message user a demerit\n',
+    'self: demerit                -- give yourself a demerit\n',
+    '@<botname>: stats            -- shows merit and demerit stats\n',
+    '@<botname>: help             -- shows this message\n'
+].join('');
+
+function issueDemerit(showName, channel) {
+    var name = showName.toLowerCase();
+    demerits[name] = demerits[name] ? demerits[name] + 1 : 1;
+    var count = demerits[name];
+
+    log.info('Demerit issued to %s', name);
+    channel.send('Demerit to ' + showName + ' (count: ' + count + ')');
+}
+
+function issueMerit(showName, channel) {
+    var name = showName.toLowerCase();
+    merits[name] = merits[name] ? merits[name] + 1 : 1;
+    var count = merits[name];
+
+    log.info('Merit issued to %s', name);
+    channel.send('Merit to ' + showName + ' (count: ' + count + ')');
+}
+
+function collectStat(message, channel) {
+    var text = message.text;
+    var demeritMatch = text.match(/([A-Za-z0-9]+):( ?)demerit/);
+    var userDemeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)demerit/);
+    var meritMatch = text.match(/([A-Za-z0-9]+):( ?)merit/);
+    var userMeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)merit/);
+
+    if (demeritMatch) {
+        var name = demeritMatch[1];
+        if (name === 'self') {
+            name = slack.getUserByID(message.user).name;
+        }
+        issueDemerit(name, channel);
+    } else if (userDemeritMatch) {
+        var user = slack.getUserByID(userDemeritMatch[1]);
+        issueDemerit(user.name, channel);
+    } else if (meritMatch) {
+        issueMerit(meritMatch[1], channel);
+    } else if (userMeritMatch) {
+        var user = slack.getUserByID(userMeritMatch[1]);
+        issueMerit(user.name, channel);
+    } else if (text === 'merit') {
+        if (lastMessage) {
+            var user = slack.getUserByID(lastMessage.user);
+            issueMerit(user.name, channel);
+        } else {
+            log.warn('Could not issue merit because lastMessage was undefined');
+        }
+    } else if (text === 'demerit') {
+        var user = slack.getUserByID(lastMessage.user);
+        issueDemerit(user.name, channel);
+    }
+}
+
+function sendStats(channel) {
+    stats = 'Demerits\n------------\n';
+    for (var user in demerits) {
+        if (demerits.hasOwnProperty(user)) {
+           stats += user + ': ' + demerits[user] + '\n';
+        }
+    }
+
+    stats += '\n\n\nMerits\n------------\n';
+    for (var user in merits) {
+        if (merits.hasOwnProperty(user)) {
+           stats += user + ': ' + merits[user] + '\n';
+        }
+    }
+
+    channel.send(stats);
+}
+
+function botCommand(message, channel) {
+    var text = message.text;
+    var botHelpMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)help/);
+    var botStatsMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)stats/);
+    if (botHelpMatch && botHelpMatch[1] === bot.id) {
+        channel.send(helpMessage);
+    } else if (botStatsMatch && botStatsMatch[1] === bot.id) {
+        sendStats(channel);
+    }
+}
 
 function main() {
     slack.on('open', function _open() {
         log.info('Slack connection open.');
     });
 
+    slack.on('loggedIn', function _loggedIn(self, team) {
+        log.info('LoggedIn: self.id = %s self.name = %s', self.id, self.name);
+        bot.id = self.id;
+        bot.name = self.name;
+    });
+
     slack.on('message', function _message(message) {
         var channel = slack.getChannelGroupOrDMByID(message.channel);
         log.info('Incoming message: %j', message);
 
-        var demeritMatch = message.text.match(/([A-Za-z0-9]+):( ?)demerit/);
-        var meritMatch = message.text.match(/([A-Za-z0-9]+):( ?)merit/);
-        log.debug('demeritMatch: %j', demeritMatch);
-        log.debug('meritMatch: %j', meritMatch);
-        if (demeritMatch) {
-            var showName = demeritMatch[1];
-            var name = showName.toLowerCase();
-            demerits[name] = demerits[name] ? demerits[name] + 1 : 1;
-            var count = demerits[name];
+        var text = message.text;
+        log.debug('Message text: %s', text);
 
-            log.info('Demerit issued to %s', name);
-            channel.send('Demerit to ' + showName + ' (count: ' + count + ')');
-        } else if (meritMatch) {
-            var showName = meritMatch[1];
-            var name = showName.toLowerCase();
-            merits[name] = merits[name] ? merits[name] + 1 : 1;
-            var count = merits[name];
-
-            log.info('Merit issued to %s', name);
-            channel.send('Merit to ' + showName + ' (count: ' + count + ')');
-        }
+        collectStat(message, channel);
+        botCommand(message, channel);
+        lastMessage = message;
     });
 
     slack.on('error', function _error(error) {
