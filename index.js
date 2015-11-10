@@ -85,7 +85,7 @@ function collectStat(message, channel) {
 
     if (demeritMatch) {
         var name = demeritMatch[1];
-        if (name === 'self') {
+        if (name.toLowerCase() === 'self') {
             name = slack.getUserByID(message.user).name;
         }
         issueDemerit(name, channel);
@@ -97,16 +97,20 @@ function collectStat(message, channel) {
     } else if (userMeritMatch) {
         var user = slack.getUserByID(userMeritMatch[1]);
         issueMerit(user.name, channel);
-    } else if (text === 'merit') {
+    } else if (text.toLowerCase() === 'merit') {
         if (lastMessage) {
             var user = slack.getUserByID(lastMessage.user);
             issueMerit(user.name, channel);
         } else {
-            log.warn('Could not issue merit because lastMessage was undefined');
+            log.warn('Could not issue merit. lastMessage: %j', lastMessage);
         }
-    } else if (text === 'demerit') {
-        var user = slack.getUserByID(lastMessage.user);
-        issueDemerit(user.name, channel);
+    } else if (text.toLowerCase() === 'demerit') {
+        if (lastMessage) {
+            var user = slack.getUserByID(lastMessage.user);
+            issueDemerit(user.name, channel);
+        } else {
+            log.warn('Could not issue demerit. lastMessage: %j', lastMessage);
+        }
     }
 }
 
