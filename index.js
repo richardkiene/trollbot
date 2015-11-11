@@ -77,39 +77,45 @@ function issueMerit(showName, channel) {
 }
 
 function collectStat(message, channel) {
-    var text = message.text;
-    var demeritMatch = text.match(/([A-Za-z0-9]+):( ?)demerit/);
-    var userDemeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)demerit/);
-    var meritMatch = text.match(/([A-Za-z0-9]+):( ?)merit/);
-    var userMeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)merit/);
+    if (message && message.text) {
+        var text = message.text;
+        var demeritMatch = text.match(/([A-Za-z0-9]+):( ?)demerit/);
+        var userDemeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)demerit/);
+        var meritMatch = text.match(/([A-Za-z0-9]+):( ?)merit/);
+        var userMeritMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)merit/);
 
-    if (demeritMatch) {
-        var name = demeritMatch[1];
-        if (name.toLowerCase() === 'self') {
-            name = slack.getUserByID(message.user).name;
-        }
-        issueDemerit(name, channel);
-    } else if (userDemeritMatch) {
-        var user = slack.getUserByID(userDemeritMatch[1]);
-        issueDemerit(user.name, channel);
-    } else if (meritMatch) {
-        issueMerit(meritMatch[1], channel);
-    } else if (userMeritMatch) {
-        var user = slack.getUserByID(userMeritMatch[1]);
-        issueMerit(user.name, channel);
-    } else if (text.toLowerCase() === 'merit') {
-        if (lastMessage) {
-            var user = slack.getUserByID(lastMessage.user);
-            issueMerit(user.name, channel);
-        } else {
-            log.warn('Could not issue merit. lastMessage: %j', lastMessage);
-        }
-    } else if (text.toLowerCase() === 'demerit') {
-        if (lastMessage) {
-            var user = slack.getUserByID(lastMessage.user);
+        if (demeritMatch) {
+            var name = demeritMatch[1];
+            if (name.toLowerCase() === 'self') {
+                name = slack.getUserByID(message.user).name;
+            }
+            issueDemerit(name, channel);
+        } else if (userDemeritMatch) {
+            var user = slack.getUserByID(userDemeritMatch[1]);
             issueDemerit(user.name, channel);
+        } else if (meritMatch) {
+            issueMerit(meritMatch[1], channel);
+        } else if (userMeritMatch) {
+            var user = slack.getUserByID(userMeritMatch[1]);
+            issueMerit(user.name, channel);
+        } else if (text.toLowerCase() === 'merit') {
+            if (lastMessage) {
+                var user = slack.getUserByID(lastMessage.user);
+                issueMerit(user.name, channel);
+            } else {
+                log.warn('Failure - merit - lastMessage: %j', lastMessage);
+            }
+        } else if (text.toLowerCase() === 'demerit') {
+            if (lastMessage) {
+                var user = slack.getUserByID(lastMessage.user);
+                issueDemerit(user.name, channel);
+            } else {
+                log.warn('Failure - demerit - lastMessage: %j', lastMessage);
+            }
         } else {
-            log.warn('Could not issue demerit. lastMessage: %j', lastMessage);
+            log.warn(
+                'message or message.text was not set: %s',
+                mod_util.inspect(message));
         }
     }
 }
@@ -134,12 +140,16 @@ function sendStats(channel) {
 
 function botCommand(message, channel) {
     var text = message.text;
-    var botHelpMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)help/);
-    var botStatsMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)stats/);
-    if (botHelpMatch && botHelpMatch[1] === bot.id) {
-        channel.send(helpMessage);
-    } else if (botStatsMatch && botStatsMatch[1] === bot.id) {
-        sendStats(channel);
+    if (text) {
+        var botHelpMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)help/);
+        var botStatsMatch = text.match(/<@([A-Za-z0-9]+)>:( ?)stats/);
+        if (botHelpMatch && botHelpMatch[1] === bot.id) {
+            channel.send(helpMessage);
+        } else if (botStatsMatch && botStatsMatch[1] === bot.id) {
+            sendStats(channel);
+        }
+    } else {
+        log.info('text was not set');
     }
 }
 
