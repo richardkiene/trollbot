@@ -113,9 +113,8 @@ function collectStat(message, channel) {
                 log.warn('Failure - demerit - lastMessage: %j', lastMessage);
             }
         } else {
-            log.warn(
-                'message or message.text was not set: %s',
-                mod_util.inspect(message));
+            log.debug(
+                'no match found in text : %s', mod_util.inspect(message));
         }
     }
 }
