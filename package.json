@@ -1,6 +1,6 @@
 {
   "name": "trollbot",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Slack bot for facilitating humorous interaction and stats tracking",
   "main": "index.js",
   "scripts": {
@@ -21,12 +21,19 @@
   },
   "homepage": "https://github.com/richardkiene/trollbot",
   "dependencies": {
+    "@slack/client": "3.6.1",
     "bunyan": "1.5.1",
     "config": "1.16.0",
     "jsonfile": "2.2.3",
-    "slack-client": "1.4.1"
+    "vasync": "1.6.4"
   },
   "directories": {
     "bin": "./bin"
+  },
+  "devDependencies": {
+    "eslint": "3.11.1",
+    "eslint-config-standard": "6.2.1",
+    "eslint-plugin-promise": "3.4.0",
+    "eslint-plugin-standard": "2.0.1"
   }
 }
