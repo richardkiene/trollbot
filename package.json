@@ -1,6 +1,6 @@
 {
   "name": "trollbot",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Slack bot for facilitating humorous interaction and stats tracking",
   "main": "index.js",
   "scripts": {
